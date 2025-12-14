@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flower Classification – Oxford 102</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 10px;
+            width: 360px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 16px;
+        }
+
+        input[type="file"] {
+            margin-bottom: 16px;
+        }
+
+        button {
+            padding: 10px 18px;
+            background: #4CAF50;
+            border: none;
+            color: white;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #9ccc9c;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        img {
+            max-width: 100%;
+            margin-top: 10px;
+            border-radius: 6px;
+        }
+
+        .error {
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🌸 Flower Classifier</h2>
+
+    <input type="file" id="imageInput" accept="image/*" />
+    <br>
+    <button onclick="predict()">Predict</button>
+
+    <div class="result" id="result"></div>
+    <img id="preview" />
+</div>
+
+<script>
+    const API_URL = "http://localhost:4000/predict";
+
+    async function predict() {
+        const input = document.getElementById("imageInput");
+        const resultDiv = document.getElementById("result");
+        const preview = document.getElementById("preview");
+
+        if (!input.files.length) {
+            resultDiv.innerHTML = "<p class='error'>Please select an image</p>";
+            return;
+        }
+
+        const file = input.files[0];
+        preview.src = URL.createObjectURL(file);
+
+        const formData = new FormData();
+        formData.append("image", file);
+
+        resultDiv.innerHTML = "⏳ Predicting...";
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error("API error");
+            }
+
+            const data = await response.json();
+
+            resultDiv.innerHTML = `
+                <strong>Prediction:</strong> ${data.prediction}<br>
+                <strong>Probability:</strong> ${(data.probability * 100).toFixed(2)}%
+            `;
+        } catch (err) {
+            resultDiv.innerHTML = "<p class='error'>Error connecting to API</p>";
+        }
+    }
+</script>
+
+</body>
+</html>
